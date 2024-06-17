@@ -1,16 +1,16 @@
 var XLSX = require("xlsx");
 var workbook = XLSX.readFile("./fixtures/plomberie/Questionnaire plomberie.xlsx");
+var domaine;
+var dataSet=[];
+
 var questionnaire={
     'B':[],
-    'C':[],
-    'D': []
+    'C':{},
+    'D': {}
 };
 
-var questionnaire2={
-    'B':[],
-    'C':[],
-    'D': []
-};
+var Keys=[];
+
 /* workbook={
     'SheetNames':['namex','namey']
     'Sheets':{
@@ -18,25 +18,26 @@ var questionnaire2={
         namey:{}
     }  
   }
-    [
-  'Directory',  'Workbook',
-  'Props',      'Custprops',
-  'Deps',       'Sheets',
-  'SheetNames', 'Strings',
-  'Styles',     'Themes',
-  'SSF'
-]
-
+  
 */
 
-
-
-function compareNombre(a,b){            
-    aI=parseInt(a.split(a[0])[1].trim());
-    bI=parseInt(b.split(b[0])[1].trim());            
+function compareNombre(a,b){                            
     var ints=a.split('').map((e)=>e.charCodeAt(0));
     var intbs=b.split('').map((e)=>e.charCodeAt(0));                        
     return parseInt(ints.toString().replaceAll(',',''))-parseInt(intbs.toString().replaceAll(',',''));
+}
+
+function getNextQuestioKey(id){
+    var resultat="";        
+    if(id){
+        if(id[0]=="B"){
+            resultat=String.fromCharCode(id.charCodeAt(0)+1)+(parseInt(id.split(id[0])[1])-1).toString();
+        }else{
+            resultat=String.fromCharCode(id.charCodeAt(0)+1)+(parseInt(id.split(id[0])[1])).toString();        
+        }            
+    }
+    
+    return resultat;
 }
 
 workbook.SheetNames.map((name)=>{
@@ -58,35 +59,21 @@ workbook.SheetNames.map((name)=>{
     console.log("------------------");
     console.log("------------------");
     console.log("------------------");
-    /*
-    const json = XLSX.utils.sheet_to_json(workbook.Sheets[name]);
-    console.log(name+":sheet:Keys:",Object.keys(workbook.Sheets[name]));    
-    const noref=Object.keys(workbook.Sheets[name])[0];    
-    console.log("no ref:",noref);
-    console.log("noref value: ",workbook.Sheets[name][noref]);
-    console.log("domaine:",domaine);
-     */   
     const domainekey=Object.keys(workbook.Sheets[name])[1];
-    const domaine=workbook.Sheets[name][domainekey];
-    const Keysxls=Object.keys(workbook.Sheets[name]);
-    var Keys=[];
+    domaine=workbook.Sheets[name][domainekey]['v'].trim();
+    const Keysxls=Object.keys(workbook.Sheets[name]);    
         Keysxls.map((key)=>{
-            if(!key.includes("!"))Keys.push(key);
+            if(!key.includes("!"))Keys.push(key.trim());
         })
         
-        Keys.sort();
-        
-        Keys.sort((a,b)=>compareNombre(a,b));
-        
-        //console.log("KEYS: ",Keys);        
-    var dataSet={'domaine':[]};
-    dataSet.domaine.push(domaine);                
+    Keys.sort((a,b)=>compareNombre(a,b));
+    Keys.sort((a,b)=>compareNombre(a[0],b[0]));    
     var question="";
     var idQuestion;
     var etiquette="";
     var category=""
     var isQuestionExist=false;
-    var labelctr=[];
+    //var labelctr=[];
     var cpt=0;
     Keys.map((key)=>{
         isQuestionExist=false;
@@ -107,39 +94,28 @@ workbook.SheetNames.map((name)=>{
                 category="D"
             }
             
-            var cellulevalue=workbook.Sheets[name][key]['v'];           
-            var linenumber=parseInt(key.split(key[0])[1].trim());
-            //console.log("LINE: ",linenumber);
-            labelctr[cpt]=linenumber;
-            cpt++;
-            var temptb=[];
-                //temptb[linenumber]=cellulevalue;           
-                //console.log("key:",key);   
-            questionnaire[category][linenumber]=cellulevalue;
+            var cellulevalue=workbook.Sheets[name][key]['v'].trim();                       
             if(cellulevalue.length>0){
                 if(cellulevalue.includes('?')){                    
                     question=cellulevalue;                    
-                    idQuestion=key;
-                    //console.log("id base Q: "+idQuestion+"base question: ",cellulevalue);                                                                                
-                    console.log("CATEGORY: ",category);
-                    if(category=='B'){
-                        console.log("CATEGORY BBBBBBBBBBBBBBBBBBBBBBBBBB****: ",category);
-                        questionnaire2[category].map((value)=>{
+                    idQuestion=key;                    
+                    if(category=='B'){                        
+                        questionnaire[category].map((value)=>{
                             if(value['question']===cellulevalue){
                                 isQuestionExist=true;                                
                             }                                                    
                         });  
-                        if(!isQuestionExist){
-                            //questionnaire2[category][key]={'question':cellulevalue,'reponses':[]};
-                            questionnaire2[category].push({'question':cellulevalue,'reponses':[]});
+                        if(!isQuestionExist){                            
+                            questionnaire[category].push({'question':cellulevalue,'reponses':[]});
                         }
                     }else{
-                        questionnaire2[category].push({'id':key,'question':cellulevalue,'reponses':[]});                                                       
+                        questionnaire[category][key]={'id':key,'question':cellulevalue,'reponses':[]};                                                                               
+                        //questionnaire[category].push({'id':key,'question':cellulevalue,'reponses':[]});                                                                               
                     }                    
                         
                 }else{
                     if(category=="B"){
-                        questionnaire2[category].map((value)=>{
+                        questionnaire[category].map((value)=>{
                             if(value['question']===question){
                                 isQuestionExist=true;
                                value['reponses'].push({'id':key,'value':cellulevalue}) 
@@ -148,130 +124,37 @@ workbook.SheetNames.map((name)=>{
                         if(! isQuestionExist){
                             var tmpreponse=[]
                             tmpreponse.push({'id':key,'value':cellulevalue});
-                            questionnaire2[category][key]={'question':cellulevalue,'reponses':tmpreponse};                    
+                            questionnaire[category][key]={'question':cellulevalue,'reponses':tmpreponse};                    
                         } 
-                    }else{
-                        questionnaire2[category].map((value)=>{
-                            if(value['id']===idQuestion){
-                                isQuestionExist=true;
-                                if(category!="B")value['reponses'].push({'id':key,'value':cellulevalue}) 
-                            }
-                        })
+                    }else{                        
+                        if(category!="B"){                            
+                            if(questionnaire[category][idQuestion]){                                
+                                questionnaire[category][idQuestion]['reponses'].push({'id':key,'value':cellulevalue});                                       
+                            }                                                        
+                        }                                                                                       
                     }                                                                                                                                            
                 }
             }                         
-        }        
-        //console.log(" values:",workbook.Sheets[name][key]);    
-        
+        }                        
 
     })    
 
-    /*
-    console.log("Questionnaire2: ",questionnaire2);
-    console.log("Questionnaire B question: ",questionnaire2['B'][0]['question']);
-    console.log("Questionnaire B reponses: ",questionnaire2['B'][0]['reponses']); 
-    console.log("Questionnaire C question: ",questionnaire2['C'][0]['question']);
-    console.log("Questionnaire C reponses: ",questionnaire2['C'][0]['reponses']);
-    console.log("Questionnaire C1 question: ",questionnaire2['C'][1]['question']);
-    console.log("Questionnaire C1 reponses: ",questionnaire2['C'][1]['reponses']);
-    console.log("Questionnaire C2 question: ",questionnaire2['C'][2]['question']);
-    console.log("Questionnaire C2 reponses: ",questionnaire2['C'][2]['reponses']);
-    //console.log("Questionnaire C3 question: ",questionnaire2['C'][3]['question']);
-    //console.log("Questionnaire C3 reponses: ",questionnaire2['C'][3]['reponses']); 
-    console.log("Questionnaire D question: ",questionnaire2['D'][0]['question']);
-    console.log("Questionnaire D reponses: ",questionnaire2['D'][0]['reponses']);
-    console.log("Questionnaire D1 question: ",questionnaire2['D'][1]['question']);
-    console.log("Questionnaire D1 reponses: ",questionnaire2['D'][1]['reponses']);
-    console.log("Questionnaire D2 question: ",questionnaire2['D'][2]['question']);
-    console.log("Questionnaire D2 reponses: ",questionnaire2['D'][2]['reponses']);   
-    */
-    /*
-    //const Keys=Object.keys(workbook.Sheets[name]);
-    //console.log(name+":sheet:"+domaine); 
-
-    //const json = XLSX.utils.sheet_to_json(workbook.Sheets[name]);
-    //console.log("Questionnaire: ",questionnaire);
-    var reper=[];
-    var val="";
-
-    
-    for(let i=0;i<questionnaire['B'].length;i++){                
-        if (questionnaire['B'][i]){
-            console.log("VVVV:",questionnaire['B'][i]+"  :"+i);
-            if(questionnaire['B'][i].includes('?')){                
-                val="B"+(i+1);            
-                console.log("=>>>>>>>>>>>>>>>>>>: ",val+" i: "+i);
-                reper[val]=i;           
-            }else{
-                console.log("YESSSSS:",questionnaire['B'][i]+"  :"+i);
-                if(questionnaire['B'][i-1].includes('?')){
-                    //val='B'+(i-1);
-                    console.log("Val yes:",val+" i to ins: "+i);
-                    console.log("REPER now: ",reper);
-                    console.log("reper Val :",reper[val]+" i to ins: "+i);
-                    reper[val]=i;           
-                    console.log("reper Val AFTER :",reper[val]+" i to ins: "+i);
-                    console.log("REPER AFTER now: ",reper);
-                }
-            }
-            //reper[val]=i;           
-        }else{
-            
-            if(val){
-                console.log("Val ask change: "+val +" i asoos:"+i);                                
-                reper[val]=i;
-            }            
-        }                    
-    }
-
-    val="";
-    
-    console.log("LAST REPER B: ",reper);
-    
-    for(let i=0;i<questionnaire['C'].length;i++){   
-        console.log(questionnaire['C'][i]+": i C",i);                     
-        if (questionnaire['C'][i]){
-           //val='C'+(i);            
-           ///if(questionnaire['C'][i].includes('?')){
-            val='C'+(i);            
-            console.log("VAL C: ",val);
-           //}else{reper[val]=i;}
-           //reper[val]=i;           
-        }else{
-            
-            if(val){                                
-                reper[val]=i;
-            }            
-        }        
-    }
-    val="";
-    
-    for(let i=0;i<questionnaire['D'].length;i++){                
-        if (questionnaire['D'][i]){
-           //val='D'+(i);       
-           if(questionnaire['D'][i].includes('?'))val='D'+(i);                 
-           reper[val]=i;           
-        }else{
-            
-            if(val){                                
-                reper[val]=i;
-            }            
-        }
-        val="";
-    }
-        
-    console.log("LEN B",questionnaire['B'].length);        
-    console.log("REPER: ",reper);      */
-    //const json = XLSX.utils.sheet_to_json(questionnaire2);
-    
+    dataSet.push({'name':domaine,'questionnaire':questionnaire});
 })
 
-/*
+console.log("Code of nex Q: ",getNextQuestioKey(""));
+console.log("Domaine: ",domaine);
+dataSet.push({'name':'Electricité','questionnaire':{}});
+dataSet.push({'name':'Chauffage','questionnaire':{}});
+dataSet.push({'name':'Serrurerie','questionnaire':{}});
+dataSet.push({'name':'Vitrerie','questionnaire':{}});
+dataSet.push({'name':'Electroménager','questionnaire':{}});
+
 const mongoose=require('mongoose');
 
 async function main() {
     console.log("Call.. connect bd ");
-    await mongoose.connect('mongodb://127.0.0.1:27017/test');
+    await mongoose.connect('mongodb://127.0.0.1:27017/domaines');
 
   // use `await mongoose.connect('mongodb://user:password@127.0.0.1:27017/test');` if your database has auth enabled
 }
@@ -279,44 +162,29 @@ main().catch(err => console.log(err));
 console.log("Call connect bd done");
 
 // definition d'un Schema
-const kittySchema=new mongoose.Schema({
-    name: String
+const domaineSchema=new mongoose.Schema({
+    name: String,
+    questionnaire:{
+        'B':[],
+        'C':{},
+        'D': {}
+    }
 });
 
 //Liaison du Schema avec un Modele
-const Kitten=mongoose.model('Kitten',kittySchema);
-const silence= new Kitten({ name: 'Silence'});
-console.log(silence.name);
+const DomaineBd=mongoose.model('DomaineBd',domaineSchema);
 
-kittySchema.methods.speak= function speak(){
-    const greeting=this.name ? 'My name is '+this.name:'I dont have name';
-    console.log(greeting);
+async function saveData(){
+    await DomaineBd.insertMany(dataSet);
+    //const kittens = await Kitten.find();
+    console.log("Async inserMany done..");
 }
 
+console.log("Questionnaire: ",questionnaire);
+console.log("Questionnaire ['C']: ",questionnaire['C']);
+console.log("Dataset: ",dataSet);
+saveData();
 
-const fluffy=new Kitten({name:'fluffy'});
-
-async function savedata(){
-    await fluffy.save();
-    //fluffy.speak();
-    const kittens = await Kitten.find();
-    console.log(kittens);
-}*/
-
-//console.log("Questionnaire: ",questionnaire2);    
-const colonnes=['B','C','D'];
-
-colonnes.map((colonne)=>{
-    questionnaire2[colonne].map((requestionReponses)=>{
-        console.log("QuesReponse:",requestionReponses);
-        /*requestionReponses.reponses.map((reponse)=>{
-            console.log("Reponse(s) ",reponse);
-        })*/
-    
-    })
-})
-
-console.log("Quesnaire cat B: ",questionnaire2['B']);
 
 
 
