@@ -1,6 +1,16 @@
 var XLSX = require("xlsx");
 var workbook = XLSX.readFile("./fixtures/plomberie/Questionnaire plomberie.xlsx");
+var questionnaire={
+    'B':[],
+    'C':[],
+    'D': []
+};
 
+var questionnaire2={
+    'B':[],
+    'C':[],
+    'D': []
+};
 /* workbook={
     'SheetNames':['namex','namey']
     'Sheets':{
@@ -70,18 +80,7 @@ workbook.SheetNames.map((name)=>{
         
         //console.log("KEYS: ",Keys);        
     var dataSet={'domaine':[]};
-    dataSet.domaine.push(domaine);            
-    var questionnaire={
-        'B':[],
-        'C':[],
-        'D': []
-    };
-
-    var questionnaire2={
-        'B':[],
-        'C':[],
-        'D': []
-    };
+    dataSet.domaine.push(domaine);                
     var question="";
     var idQuestion;
     var etiquette="";
@@ -115,38 +114,50 @@ workbook.SheetNames.map((name)=>{
             cpt++;
             var temptb=[];
                 //temptb[linenumber]=cellulevalue;           
-                console.log("key:",key);   
+                //console.log("key:",key);   
             questionnaire[category][linenumber]=cellulevalue;
             if(cellulevalue.length>0){
                 if(cellulevalue.includes('?')){                    
                     question=cellulevalue;                    
                     idQuestion=key;
                     //console.log("id base Q: "+idQuestion+"base question: ",cellulevalue);                                                                                
-                    /*questionnaire2[category].map((value)=>{
-                        if(value['question']===cellulevalue){
-                            isQuestionExist=true;
-                            
-                        }                                                    
-                    });*/  
-                    //if(!isQuestionExist){
-                        questionnaire2[category].push({'id':key,'question':cellulevalue,'reponses':[]});
-                    //}                                   
-                }else{
-                    
-                    //console.log("id Q: "+idQuestion+ "concerne la question: ",question);                    
-                    //console.log("***Reponse:",cellulevalue);
-                    questionnaire2[category].map((value)=>{
-                        if(value['id']===idQuestion){
-                            //isQuestionExist=true;
-                            value['reponses'].push({'id':key,'value':cellulevalue}) 
+                    console.log("CATEGORY: ",category);
+                    if(category=='B'){
+                        console.log("CATEGORY BBBBBBBBBBBBBBBBBBBBBBBBBB****: ",category);
+                        questionnaire2[category].map((value)=>{
+                            if(value['question']===cellulevalue){
+                                isQuestionExist=true;                                
+                            }                                                    
+                        });  
+                        if(!isQuestionExist){
+                            //questionnaire2[category][key]={'question':cellulevalue,'reponses':[]};
+                            questionnaire2[category].push({'question':cellulevalue,'reponses':[]});
                         }
-                    })
-                    /*
-                    if(! isQuestionExist){
-                        var tmpreponse=[]
-                        tmpreponse.push({'id':key,'value':cellulevalue});
-                        questionnaire2[category].push({'question':cellulevalue,'reponses':tmpreponse});                    
-                    }*/                                        
+                    }else{
+                        questionnaire2[category].push({'id':key,'question':cellulevalue,'reponses':[]});                                                       
+                    }                    
+                        
+                }else{
+                    if(category=="B"){
+                        questionnaire2[category].map((value)=>{
+                            if(value['question']===question){
+                                isQuestionExist=true;
+                               value['reponses'].push({'id':key,'value':cellulevalue}) 
+                            }
+                        })
+                        if(! isQuestionExist){
+                            var tmpreponse=[]
+                            tmpreponse.push({'id':key,'value':cellulevalue});
+                            questionnaire2[category][key]={'question':cellulevalue,'reponses':tmpreponse};                    
+                        } 
+                    }else{
+                        questionnaire2[category].map((value)=>{
+                            if(value['id']===idQuestion){
+                                isQuestionExist=true;
+                                if(category!="B")value['reponses'].push({'id':key,'value':cellulevalue}) 
+                            }
+                        })
+                    }                                                                                                                                            
                 }
             }                         
         }        
@@ -251,28 +262,11 @@ workbook.SheetNames.map((name)=>{
         
     console.log("LEN B",questionnaire['B'].length);        
     console.log("REPER: ",reper);      */
-    const json = XLSX.utils.sheet_to_json(questionnaire2);
-    console.log("Questionnaire: ",questionnaire2);
-
-    console.log("Questionnaire Json: ",json.length);
-
+    //const json = XLSX.utils.sheet_to_json(questionnaire2);
+    
 })
 
 /*
-mongoose.connect(
-    'mongodb://localhost:27017/questionnaire',{
-        userNewUrlParser: true,
-        userUnifiedTopology: true,
-        userCreateIndex: true
-},(err)=>{
-    if(err){
-        console.log('Db is not connecded beacause: ',err);
-        return;
-    }
-    console.log("*** Db connected ***");
-}
-);*/
-
 const mongoose=require('mongoose');
 
 async function main() {
@@ -307,9 +301,22 @@ async function savedata(){
     //fluffy.speak();
     const kittens = await Kitten.find();
     console.log(kittens);
-}
+}*/
 
-savedata();
+//console.log("Questionnaire: ",questionnaire2);    
+const colonnes=['B','C','D'];
 
-console.log('ok');
+colonnes.map((colonne)=>{
+    questionnaire2[colonne].map((requestionReponses)=>{
+        console.log("QuesReponse:",requestionReponses);
+        /*requestionReponses.reponses.map((reponse)=>{
+            console.log("Reponse(s) ",reponse);
+        })*/
+    
+    })
+})
+
+console.log("Quesnaire cat B: ",questionnaire2['B']);
+
+
 
