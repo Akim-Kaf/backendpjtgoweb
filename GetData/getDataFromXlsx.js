@@ -105,7 +105,7 @@ function createDataSet(workbook){
                                 }                                                    
                             });  
                             if(!isQuestionExist){                            
-                                questionnaire[category].push({'domaine':domaine, 'question':cellulevalue,'reponses':[]});
+                                questionnaire[category].push({'id':key, 'domaine':domaine, 'question':cellulevalue,'reponses':[]});
                             }
                         }else{
                             questionnaire[category][key]={'id':key, 'domaine':domaine, 'question':cellulevalue,'reponses':[]};                                                                               

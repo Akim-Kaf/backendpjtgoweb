@@ -23,6 +23,7 @@ const domaineSchema=new mongoose.Schema({
     }
 });
 
+// const userSchema=ne
 
 //Liaison du Schema avec un Modele
 const DomaineBd=mongoose.model('DomaineBd',domaineSchema);
@@ -41,9 +42,9 @@ async function getDomainesData(){
     return domaines;        
 }
 
-//const dataSet=getDataFromXlsx(workbook);
+const dataSet=getDataFromXlsx(workbook);
 //console.log("Dataset: ",dataSet);
-//saveData();
+saveData();
 
 var express= require('express');
 var app= express()
@@ -66,7 +67,7 @@ app.get('/projetgoweb/domaines',(request, response)=>{
     });    
 })
 
-app.post('/',(request,response)=>{
+app.post('/projetgoweb/intervention',(request,response)=>{
     console.log("Request posted: ",request.body);
 })
 app.listen(8080);
