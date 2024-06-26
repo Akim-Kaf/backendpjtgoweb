@@ -22,7 +22,7 @@ async function main() {
 main().catch(err => console.log(err));
 console.log("Call connect bd done");
 
-// definition d'un Schema
+// definition d'un Schema pour les domaines
 const domaineSchema=new mongoose.Schema({
     nom: String,
     questionnaire:{
@@ -32,10 +32,22 @@ const domaineSchema=new mongoose.Schema({
     }
 });
 
-// const userSchema=ne
+// definition d'un Schema pour les utilisateurs
+const userSchema=new mongoose.Schema({
+    prenom: String,
+    nom: String,
+    adresse: String,
+    codePostal: String,
+    telephone: String,
+    email: String,
+    responses:[]
+});
 
 //Liaison du Schema avec un Modele
 const DomaineBd=mongoose.model('DomaineBd',domaineSchema);
+//Liaison du Schema avec un Modele
+const User=mongoose.model('User',userSchema);
+
 
 async function saveData(){
     await DomaineBd.insertMany(dataSet);    
@@ -44,12 +56,27 @@ async function saveData(){
     console.log("Async inserMany done..");
 }
 
+async function saveUserData(userdata){
+    const user= new User({
+        prenom: userdata.prenom ,
+        nom: userdata.nom,
+        adresse: userdata.adresse,
+        codePostal: userdata.codePostal,
+        telephone: userdata.telephone,
+        email: userdata.email,
+        responses: userdata.responses
+    });
+    await user.save();       
+    console.log("Userdata seved!: ",user);     
+}
+
 async function getDomainesData(){    
     const domaines = await DomaineBd.find().limit(6);
     console.log("Async Data get done");
     
     return domaines;        
 }
+
 
 //const dataSet=getDataFromXlsx(workbook);
 //console.log("Dataset: ",dataSet);
@@ -68,12 +95,7 @@ app.use(cors());
 
 function authentification(req,res,next){
     const authHeader=req.headers['authorization'];
-    const token= authHeader && authHeader.split(' ')[1];
-    console.log("Token receve:",token);
-    console.log("SECRET_KEY:",SECRET_KEY);
-    console.log("test:",token===SECRET_KEY);
-    console.log("Token receve len:",token.length);
-    console.log("SECRET_KEY len :",SECRET_KEY.length);
+    const token= authHeader && authHeader.split(' ')[1];    
     if(token == null)return res.sendStatus(401);
 
     if(token!==SECRET_KEY){
@@ -94,6 +116,16 @@ app.get('/projetgoweb/domaines',authentification,(request, response)=>{
 
 app.post('/projetgoweb/intervention',authentification,(request,response)=>{
     console.log("Request posted: ",request.body);
+    try{
+        saveUserData(request.body).then((reponsedata)=>{
+            console.log("reponsedata: ",reponsedata);
+            response.sendStatus(200);
+        });
+
+    }catch(error){
+        response.sendStatus(500);
+    }
+    
 })
 
 app.listen(8080);
