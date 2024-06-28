@@ -14,8 +14,11 @@ var XLSX = require("xlsx");
 var workbook = XLSX.readFile("./fixtures/plomberie/Questionnaire plomberie.xlsx");
 
 async function main() {
-    console.log("Call.. connect bd ");
+    console.log("Call.. connect bd 1212 ");
+    //local connexion url
     await mongoose.connect('mongodb://127.0.0.1:27017/domaines');
+    //docker db connexion url
+    //await mongoose.connect('mongodb://mongo:27017/domaines');
 
   // use `await mongoose.connect('mongodb://user:password@127.0.0.1:27017/test');` if your database has auth enabled
 }
@@ -78,9 +81,9 @@ async function getDomainesData(){
 }
 
 
-//const dataSet=getDataFromXlsx(workbook);
+const dataSet=getDataFromXlsx(workbook);
 //console.log("Dataset: ",dataSet);
-//saveData();
+saveData();
 
 
 
@@ -95,7 +98,9 @@ app.use(cors());
 
 function authentification(req,res,next){
     const authHeader=req.headers['authorization'];
-    const token= authHeader && authHeader.split(' ')[1];    
+    const token= authHeader && authHeader.split(' ')[1];
+    console.log("Token:",token);
+    console.log("SECRET_KEY:",SECRET_KEY);
     if(token == null)return res.sendStatus(401);
 
     if(token!==SECRET_KEY){
@@ -103,6 +108,11 @@ function authentification(req,res,next){
     }
     next();
 }
+
+app.get('/projetgoweb/',(request,response)=>{
+		console.log("************API TOOOOOOOOOOOOOO**************");
+		response.send("API RUNING");
+});
 
 //Routes securise par le middleware d'authentification
 app.get('/projetgoweb/domaines',authentification,(request, response)=>{
