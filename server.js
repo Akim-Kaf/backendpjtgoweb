@@ -43,7 +43,7 @@ const userSchema=new mongoose.Schema({
     codePostal: String,
     telephone: String,
     email: String,
-    responses:[]
+    reponses:[]
 });
 
 //Liaison du Schema avec un Modele
@@ -67,7 +67,7 @@ async function saveUserData(userdata){
         codePostal: userdata.codePostal,
         telephone: userdata.telephone,
         email: userdata.email,
-        responses: userdata.responses
+        reponses: userdata.reponses
     });
     await user.save();       
     console.log("Userdata seved!: ",user);     
