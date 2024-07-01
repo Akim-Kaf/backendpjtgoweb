@@ -4,7 +4,7 @@ var express= require('express');
 var bodyParser= require('body-parser');
 
 var app= express()
-// charge les variables d'environnement depuis le fichier .env
+// charge les variables d'environnement 
 dotenv.config();
 
 const SECRET_KEY = process.env.SECRET_KEY;
@@ -13,8 +13,7 @@ const getDataFromXlsx=require('./GetData/getDataFromXlsx');
 var XLSX = require("xlsx");
 var workbook = XLSX.readFile("./fixtures/plomberie/Questionnaire plomberie.xlsx");
 
-async function main() {
-    console.log("Call.. connect bd 1212 ");
+async function main() {    
     //local connexion url
     await mongoose.connect('mongodb://127.0.0.1:27017/domaines');
     //docker db connexion url
@@ -46,19 +45,19 @@ const userSchema=new mongoose.Schema({
     reponses:[]
 });
 
-//Liaison du Schema avec un Modele
+//Liaison du Schema avec un Modele DoimaineBd
 const DomaineBd=mongoose.model('DomaineBd',domaineSchema);
-//Liaison du Schema avec un Modele
+
+//Liaison du Schema avec un Modele User
 const User=mongoose.model('User',userSchema);
 
-
+// Insert les données provenant du fichier xlsx en masse 
 async function saveData(){
-    await DomaineBd.insertMany(dataSet);    
-    const domaines = await DomaineBd.find();
-    console.log("DATA:",domaines);
-    console.log("Async inserMany done..");
+    await DomaineBd.insertMany(dataSet);        
+    console.log("InsertMany done ...");
 }
 
+//Crée une intance de type User avec les informations de l'utilisateur et le persiste dans la bd
 async function saveUserData(userdata){
     const user= new User({
         prenom: userdata.prenom ,
@@ -74,19 +73,13 @@ async function saveUserData(userdata){
 }
 
 async function getDomainesData(){    
-    const domaines = await DomaineBd.find().limit(6);
-    console.log("Async Data get done");
-    
+    const domaines = await DomaineBd.find().limit(6);        
     return domaines;        
 }
 
 
 const dataSet=getDataFromXlsx(workbook);
-//console.log("Dataset: ",dataSet);
 saveData();
-
-
-
 
 //Middlewares
 // parse application/x-www-form-urlencoded
@@ -96,11 +89,10 @@ app.use(bodyParser.json());
 var cors = require('cors');
 app.use(cors());
 
+//Authentification par clé SECRETE
 function authentification(req,res,next){
     const authHeader=req.headers['authorization'];
-    const token= authHeader && authHeader.split(' ')[1];
-    console.log("Token:",token);
-    console.log("SECRET_KEY:",SECRET_KEY);
+    const token= authHeader && authHeader.split(' ')[1];    
     if(token == null)return res.sendStatus(401);
 
     if(token!==SECRET_KEY){
@@ -114,21 +106,19 @@ app.get('/projetgoweb/',(request,response)=>{
 		response.send("API RUNING");
 });
 
-//Routes securise par le middleware d'authentification
+//Route securisée par le middleware d'authentification pour les données de chaque domaine
 app.get('/projetgoweb/domaines',authentification,(request, response)=>{
     
     console.log("GET DOMAINES!!!!");
-    getDomainesData().then((reponsedata)=>{
-        console.log("reponsedata: ",reponsedata);
+    getDomainesData().then((reponsedata)=>{        
         response.send(reponsedata);
     });    
 })
 
-app.post('/projetgoweb/intervention',authentification,(request,response)=>{
-    console.log("Request posted: ",request.body);
+// Route securisée par le middleware d'authentification pour la demande d'une itervention
+app.post('/projetgoweb/intervention',authentification,(request,response)=>{    
     try{
-        saveUserData(request.body).then((reponsedata)=>{
-            console.log("reponsedata: ",reponsedata);
+        saveUserData(request.body).then((reponsedata)=>{            
             response.sendStatus(200);
         });
 

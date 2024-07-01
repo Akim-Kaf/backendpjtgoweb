@@ -6,19 +6,6 @@ function compareNombre(a,b){
     return parseInt(ints.toString().replaceAll(',',''))-parseInt(intbs.toString().replaceAll(',',''));
 }
 
-function getNextQuestioKey(id){
-    var resultat="";        
-    if(id){
-        if(id[0]=="B"){
-            resultat=String.fromCharCode(id.charCodeAt(0)+1)+(parseInt(id.split(id[0])[1])-1).toString();
-        }else{
-            resultat=String.fromCharCode(id.charCodeAt(0)+1)+(parseInt(id.split(id[0])[1])).toString();        
-        }            
-    }
-    
-    return resultat;
-}
-
 function createDataSet(workbook){
     var domaine;    
     var questionnaire={
@@ -29,35 +16,17 @@ function createDataSet(workbook){
 
     var Keys=[];
 
-    /* workbook={
+    /* un exemple de la représentation de données du fichier xlsx 
+    workbook={
         'SheetNames':['namex','namey']
         'Sheets':{
             namex:{},
             namey:{}
         }  
-    }
-    
+    }    
     */
 
-    workbook.SheetNames.map((name)=>{
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
-        console.log("------------------");
+    workbook.SheetNames.map((name)=>{        
         const domainekey=Object.keys(workbook.Sheets[name])[1];
         domaine=workbook.Sheets[name][domainekey]['v'].trim();
         const Keysxls=Object.keys(workbook.Sheets[name]);    
@@ -68,31 +37,15 @@ function createDataSet(workbook){
         Keys.sort((a,b)=>compareNombre(a,b));
         Keys.sort((a,b)=>compareNombre(a[0],b[0]));    
         var question="";
-        var idQuestion;
-        var etiquette="";
+        var idQuestion;        
         var category=""
-        var isQuestionExist=false;
-        //var labelctr=[];
+        var isQuestionExist=false;        
         var cpt=0;
         Keys.map((key)=>{
             isQuestionExist=false;
             if(cpt==2)cpt=0;
-            if(key!=domainekey & !key.includes('!')){
-                if(key[0]==="B"){
-                    etiquette="lieu";
-                    category="B"
-                }
-
-                if(key[0]==="C"){
-                    etiquette="nature";
-                    category="C"
-                }
-
-                if(key[0]==="D"){
-                    etiquette="squestion";
-                    category="D"
-                }
-                
+            if(key!=domainekey & !key.includes('!')){            
+                category=key[0];                
                 var cellulevalue=workbook.Sheets[name][key]['v'].trim();                       
                 if(cellulevalue.length>0){
                     if(cellulevalue.includes('?')){                    
